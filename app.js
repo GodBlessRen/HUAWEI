@@ -156,6 +156,7 @@ async function selectProblem(pid) {
   if (!p) return;
   saveDraft();
   state.selected = p;
+  localStorage.setItem("huawei-acm:last", p.pid);
   state.tab = "statement";
   document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === "statement"));
   renderList();
