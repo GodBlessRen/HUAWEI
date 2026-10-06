@@ -29,56 +29,11 @@ const normalizeOutput = (s="") => s.replace(/\r\n/g, "\n").trimEnd();
 
 function markdown(md="") {
   const blocks = [];
-  const math = [];
-
   md = md.replace(/```([\s\S]*?)```/g, (_, code) => {
     const token = `@@BLOCK_${blocks.length}@@`;
     blocks.push(`<pre><code>${escapeHtml(code.replace(/^\n|\n$/g,""))}</code></pre>`);
     return token;
   });
-
-  // Protect TeX before Markdown inserts <br> tags. Some upstream formulas wrap
-  // across source lines, so normalize inline-math line breaks to spaces.
-  md = md.replace(/\$\$([\s\S]*?)\$\$/g, (_, body) => {
-    const token = `@@MATH_${math.length}@@`;
-    math.push(`$${body}$`);
-    return token;
-  });
-  md = md.replace(/\$([^$]+?)\$/g, (_, body) => {
-    const token = `@@MATH_${math.length}@@`;
-    math.push(`${body.replace(/\s*\n\s*/g, " ")}const UPSTREAM = "https://raw.githubusercontent.com/Zhou-xingyu-ts/huawei-acm-practice/main/build/dataset";
-const MANIFEST_URL = `${UPSTREAM}/manifest.json`;
-
-const state = {
-  problems: [],
-  selected: null,
-  tab: "statement",
-  cache: new Map(),
-  worker: null,
-  workerReady: null,
-  runSeq: 0,
-};
-
-const el = (id) => document.getElementById(id);
-const listEl = el("problemList");
-const countEl = el("problemCount");
-const editor = el("codeEditor");
-const runBtn = el("runBtn");
-const runtimeBadge = el("runtimeBadge");
-const judgeResults = el("judgeResults");
-const judgeSummary = el("judgeSummary");
-const contentPanel = el("contentPanel");
-const problemHeader = el("problemHeader");
-const draftState = el("draftState");
-
-const key = (kind, pid) => `huawei-acm:${kind}:${pid}`;
-const escapeHtml = (s="") => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const normalizeOutput = (s="") => s.replace(/\r\n/g, "\n").trimEnd();
-
-);
-    return token;
-  });
-
   let html = escapeHtml(md)
     .replace(/^### (.+)$/gm, "<h3>$1</h3>")
     .replace(/^## (.+)$/gm, "<h2>$1</h2>")
@@ -88,18 +43,18 @@ const normalizeOutput = (s="") => s.replace(/\r\n/g, "\n").trimEnd();
     .replace(/`([^\n]+?)`/g, "<code>$1</code>")
     .replace(/\n{2,}/g, "</p><p>")
     .replace(/\n/g, "<br>");
-
   html = `<p>${html}</p>`;
   blocks.forEach((b, i) => { html = html.replace(`@@BLOCK_${i}@@`, b); });
-  math.forEach((m, i) => { html = html.replace(`@@MATH_${i}@@`, m); });
   return html.replace(/<p>\s*<h/g, "<h").replace(/<\/h([123])>\s*<\/p>/g, "</h$1>");
 }
 
+
 async function typesetMath(root) {
-  if (!window.MathJax?.typesetPromise) return;
+  const mj = window.MathJax;
+  if (!mj || !mj.typesetPromise) return;
   try {
-    window.MathJax.typesetClear?.([root]);
-    await window.MathJax.typesetPromise([root]);
+    if (mj.typesetClear) mj.typesetClear([root]);
+    await mj.typesetPromise([root]);
   } catch (error) {
     console.warn("MathJax typeset failed", error);
   }
