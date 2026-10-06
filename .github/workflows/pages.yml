@@ -23,16 +23,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Check JavaScript syntax
         run: |
-          node --check app.js
+          node --check app-v2.js
           node --check py-worker.js
+
+      - name: Build self-contained site
+        run: |
+          mkdir -p _site
+          rsync -a --exclude '.git' --exclude '_site' ./ _site/
+          git clone --depth 1 https://github.com/Zhou-xingyu-ts/huawei-acm-practice.git /tmp/huawei-acm-practice
+          cp -R /tmp/huawei-acm-practice/build/dataset _site/data
+          test -f _site/data/manifest.json
+          test -f _site/index.html
+          test -f _site/app-v2.js
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
